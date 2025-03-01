@@ -19,7 +19,6 @@ class RustConfig:
     rust_enable_auto_pages: bool
     """if create auto pages, default True"""
 
-
     @classmethod
     def from_app(cls, app: Sphinx) -> RustConfig:
         """Create a new RustConfig from the Sphinx application."""
