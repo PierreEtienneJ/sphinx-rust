@@ -95,23 +95,18 @@ pub fn analyze_crate(path: &str) -> Result<AnalysisResult> {
     let mut read_modules = vec![];
     while let Some((parent_dir, module_name, parent)) = modules_to_read.pop() {
         let (module_path, submodule_dir) =
-            if parent_dir.join(&module_name).with_extension("rs").exists() {
-                (
-                    parent_dir.join(&module_name).with_extension("rs"),
-                    parent_dir.join(&module_name),
-                )
-            } else if parent_dir.join(&module_name).join("mod.rs").exists() {
-                (
-                    parent_dir.join(&module_name).join("mod.rs"),
-                    parent_dir.to_path_buf(),
-                )
-            }
-            else if parent_dir.join(&parent[1..].join("/")).join(&module_name).with_extension("rs").exists() {
+            if parent_dir.join(&parent[1..].join("/")).join(&module_name).with_extension("rs").exists() {
                 (
                     parent_dir.join(&parent[1..].join("/")).join(&module_name).with_extension("rs"),
-                    parent_dir.join(&module_name),
+                    parent_dir.join(&parent[1..].join("/")).join(&module_name),
                 )
-            } else {
+            } else if parent_dir.join(&parent[1..].join("/")).join(&module_name).join("mod.rs").exists() {
+                (
+                    parent_dir.join(&parent[1..].join("/")).join(&module_name).join("mod.rs"),
+                    parent_dir.join(&parent[1..].join("/")).to_path_buf(),
+                )
+            }
+            else {
                 // TODO warn about missing module?
                 continue;
             };
