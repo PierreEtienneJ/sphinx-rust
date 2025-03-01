@@ -105,9 +105,12 @@ class RustDomain(Domain):
                     f"Error analyzing crate: {e!s}", type="rust", subtype="analyze"
                 )
                 return
-            create_pages(srcdir, result)
+
+            if config.rust_enable_auto_pages:
+                create_pages(srcdir / config.rust_root_pages, result)
+
             if config.rust_viewcode:
-                create_code_pages(result.crate_, srcdir, cache)
+                create_code_pages(result.crate_, srcdir / config.rust_root_pages, cache)
 
     @property
     def objects(self) -> dict[str, ObjectEntry]:
@@ -192,7 +195,7 @@ class RustDomain(Domain):
 
 def create_pages(srcdir: Path, result: AnalysisResult) -> None:
     """Create the pages for the analyzed crate."""
-    root = srcdir.joinpath("api", "crates", result.crate_)
+    root = srcdir.joinpath(result.crate_)
     if root.exists():
         # TODO only update changed files (so that sphinx knows what to rebuild)
         shutil.rmtree(root)
@@ -244,7 +247,7 @@ def create_code_pages(crate_name: str, srcdir: Path, cache: Path) -> None:
         for m in load_descendant_modules(str(cache), [crate_name], True)
         if m.file
     ]:
-        code_folder = srcdir.joinpath("api", "crates", crate_name, "code")
+        code_folder = srcdir.joinpath(crate_name, "code")
         code_folder.mkdir(exist_ok=True, parents=True)
         for full_name, file_path in modules:
             # TODO catch exceptions here, if a relative path cannot be created
