@@ -105,6 +105,12 @@ pub fn analyze_crate(path: &str) -> Result<AnalysisResult> {
                     parent_dir.join(&module_name).join("mod.rs"),
                     parent_dir.to_path_buf(),
                 )
+            }
+            else if parent_dir.join(&parent[1..].join("/")).join(&module_name).with_extension("rs").exists() {
+                (
+                    parent_dir.join(&parent[1..].join("/")).join(&module_name).with_extension("rs"),
+                    parent_dir.join(&module_name),
+                )
             } else {
                 // TODO warn about missing module?
                 continue;
