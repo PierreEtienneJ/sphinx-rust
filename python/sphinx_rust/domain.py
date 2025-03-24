@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.builders import Builder
     from sphinx.environment import BuildEnvironment
+
     from sphinx_rust.sphinx_rust import AnalysisResult
 
 
@@ -115,7 +116,7 @@ class RustDomain(Domain):
     @staticmethod
     def on_build_finished(app: Sphinx, exception: Union[Exception, None]) -> None:
         # if an exception occure, don't delete files
-        if not exception is None:
+        if exception is not None:
             return
 
         config = RustConfig.from_app(app)
@@ -130,10 +131,12 @@ class RustDomain(Domain):
             # FIXME do not parse again
             try:
                 result = analyze_crate(str(path), str(cache_path))
-            except OSError as e:
+            except OSError:
                 continue
 
-            shutil.rmtree(srcdir / config.rust_root_pages / result.crate_, ignore_errors=True)
+            shutil.rmtree(
+                srcdir / config.rust_root_pages / result.crate_, ignore_errors=True
+            )
 
     @property
     def objects(self) -> dict[str, ObjectEntry]:
