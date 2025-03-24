@@ -21,7 +21,6 @@ class RustConfig:
     rust_keep_files: bool
     """if keep files at the end, if False delete all auto generated files"""
 
-
     @classmethod
     def from_app(cls, app: Sphinx) -> RustConfig:
         """Create a new RustConfig from the Sphinx application."""
