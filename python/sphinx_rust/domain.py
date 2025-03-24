@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import shutil
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, Union
 
 from sphinx import addnodes
 from sphinx.domains import Domain
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.builders import Builder
     from sphinx.environment import BuildEnvironment
-
     from sphinx_rust.sphinx_rust import AnalysisResult
 
 
@@ -82,6 +81,7 @@ class RustDomain(Domain):
     def app_setup(cls, app: Sphinx) -> None:
         RustConfig.add_configs(app)
         app.connect("builder-inited", cls.on_builder_inited)
+        app.connect("build-finished", cls.on_build_finished)
         app.add_domain(cls)
 
     @staticmethod
@@ -111,6 +111,29 @@ class RustDomain(Domain):
 
             if config.rust_viewcode:
                 create_code_pages(result.crate_, srcdir / config.rust_root_pages, cache)
+
+    @staticmethod
+    def on_build_finished(app: Sphinx, exception: Union[Exception, None]) -> None:
+        # if an exception occure, don't delete files
+        if not exception is None:
+            return
+
+        config = RustConfig.from_app(app)
+
+        if config.rust_keep_files:
+            return
+
+        srcdir = Path(str(app.srcdir))
+        for crate in config.rust_crates:
+            cache_path = app.env.rust_cache_path
+            path = srcdir / str(crate)
+            # FIXME do not parse again
+            try:
+                result = analyze_crate(str(path), str(cache_path))
+            except OSError as e:
+                continue
+
+            shutil.rmtree(srcdir / config.rust_root_pages / result.crate_, ignore_errors=True)
 
     @property
     def objects(self) -> dict[str, ObjectEntry]:
